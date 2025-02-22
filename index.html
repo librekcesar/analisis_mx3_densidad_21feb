@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.0/dist/leaflet.css" />
+    <link rel="stylesheet" href="leaflet-search-master/leaflet-search-master/src/leaflet-search.css" />
+    <script src="https://unpkg.com/leaflet@1.3.0/dist/leaflet.js"></script>
+    <script src="leaflet-search-master/leaflet-search-master/src/leaflet-search.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script> <!--NOTA IMPORTANTE: cuando hagas clasifcación, siempre agrega la librería de chroma-->
+    <script type="text/javascript" src="VOL_MX3_copia_ene.js"></script>
+    <script type="text/javascript" src="dist_vol_dic_copia.js"></script>
+    
+    <script type="text/javascript" src="VOL_MX3_ene_dic_copia.js"></script>
+    <script src="https://cdn.jsdelivr.net/leaflet.choropleth/1.0.0/choropleth.min.js"></script> <!--esta librería permite llamar la clasificación para mostrar la capa-->
+
+    <style>
+        #map { 
+            width: 100%;
+            height: 900px;
+            box-shadow: 5px 5px 5px #888; 
+        }
+        .legend {
+        background: white;
+        padding: 10px;
+        line-height: 18px;
+        color: #555;
+    }
+    .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+    }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="legend" class="legend"></div>
+
+    <script>
+        var map = L.map("map").setView([19.3637, -99.2378], 11);
+        L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Capas existentes
+       
+        //capa de puntos (Volumen octubre)
+
+        
+        var centroideLayer = L.geoJSON(dic, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: "#f1ed08",  // Color azul para centroides
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup("<b>LATITUD:</b> " + feature.properties.LATITUD + "<br><b>LONGITUD:</b> " + feature.properties.LONGITUD);
+            }
+        });
+
+        ///Segunda capa de puntos
+        var centroideLayer2 = L.geoJSON(ene, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: "#0a6dec",  // Color azul para centroides
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup("<b>LATITUD:</b> " + feature.properties.latitud + "<br><b>LONGITUD:</b> " + feature.properties.longitud);
+            }
+        });
+
+
+
+
+        
+
+        // Cuarta capa con clasificación Natural Jenks
+        function style4(feature) {
+            var values = mx3.features.map(f => f.properties.densidad);//Aqui se llama a la capa y el atributo a clasificar
+            var scale = chroma.scale('RdYlGn').domain([Math.min(...values), Math.max(...values)]).classes(chroma.limits(values, 'jenks', 7));
+            return {
+                fillColor: scale(feature.properties.densidad),//aca se tiene que llamar de nuevo el atributo para fillcolor
+                weight: 1,
+                opacity: 1,
+                color: 'black',
+                dashArray: '2',
+                fillOpacity: 0.7
+            };
+        }
+
+        function onEachFeature4(feature, layer) {
+            if (feature.properties) {
+                layer.bindPopup('<p> Zonificación: ' + feature.properties.zonificacion + '</p><p>Densidad diciembre (Paquetes/Km2): ' + feature.properties.dens_dic + '</p><p>Densidad enero (Paquetes/Km2): ' + feature.properties.DENSIDAD + '</p>' + '</p><p>numero de paquetes enero: ' + feature.properties.NUMPOINTS + '</p>' + '</p>' + '</p><p>numero de paquetes diciembre: ' + feature.properties.NUMPOINTS_dic + '</p>');
+            }
+        }
+
+        var layerGroup4 = L.geoJSON(mx3, {
+            style: style4,
+            onEachFeature: onEachFeature4
+        });
+
+        // Mapa base y controles de capas
+        var baseMaps = {
+            "Mapa Base": map
+        };
+
+        var overlayMaps = {
+            "Distribución de entregas de Diciembre": centroideLayer,
+            "Distribución de entregas de Enero": centroideLayer2,
+            "Densidad de entregas MX33 (enero)": layerGroup4
+            
+        };
+
+        L.control.layers(baseMaps, overlayMaps, {
+            collapsed: false
+        }).addTo(map);
+
+
+
+
+var legend = L.control({ position: 'bottomright' });
+
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    var grades = chroma.limits(values, 'jenks', 7); // los mismos límites usados en la clasificación
+    var labels = [];
+    var scale = chroma.scale('RdYlGn').domain([Math.min(...values), Math.max(...values)]);
+
+    // Generar la leyenda con colores y rangos
+    for (var i = 0; i < grades.length - 1; i++) {
+        div.innerHTML +=
+            '<i style="background:' + scale(grades[i]) + '"></i> ' +
+            Math.round(grades[i]) + (grades[i + 1] ? '&ndash;' + Math.round(grades[i + 1]) + '<br>' : '+');
+    }
+
+    return div;
+};
+
+    
+    layerGroup.addTo(map);
+    legend.addTo(map);
+    </script>
+</body>
+</html>
