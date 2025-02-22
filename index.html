@@ -104,7 +104,7 @@
 
         function onEachFeature4(feature, layer) {
             if (feature.properties) {
-                layer.bindPopup('<p> Zonificación: ' + feature.properties.zonificacion + '</p><p>Densidad diciembre (Paquetes/Km2): ' + feature.properties.dens_dic + '</p><p>Densidad enero (Paquetes/Km2): ' + feature.properties.DENSIDAD + '</p>' + '</p><p>numero de paquetes enero: ' + feature.properties.NUMPOINTS + '</p>' + '</p>' + '</p><p>numero de paquetes diciembre: ' + feature.properties.NUMPOINTS_dic + '</p>');
+                layer.bindPopup('<p> Zonificación: ' + feature.properties.zonificacion + '</p><p>Densidad diciembre (Paquetes/Km2): ' + feature.properties.dens_dic + '</p><p>Densidad enero (Paquetes/Km2): ' + feature.properties.densidad + '</p>' + '</p><p>numero de paquetes enero: ' + feature.properties.NUMPOINTS + '</p>' + '</p>' + '</p><p>numero de paquetes diciembre: ' + feature.properties.NUMPOINTS_dic + '</p>');
             }
         }
 
